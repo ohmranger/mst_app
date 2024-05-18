@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MST App
+Exec=python3 /home/$(whoami)/mst_app/app.py
+Icon=/home/$(whoami)/mst_app/icon.png
+Type=Application
+Terminal=false
