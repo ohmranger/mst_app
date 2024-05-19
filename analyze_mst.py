@@ -3,9 +3,38 @@ import pandas as pd
 import random
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT 
+
 from scipy.signal import find_peaks
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel,QSpinBox ,QWidget
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel,QSpinBox ,QWidget, QFileDialog
 import os
+import time
+
+class CustomNavigationToolbar(NavigationToolbar2QT):
+    def __init__(self, canvas, parent=None, coordinates=True):
+        super().__init__(canvas, parent, coordinates)
+
+    def save_figure(self):
+        usb_drives = []
+        media_dir = "/media/mst"
+        if os.path.exists(media_dir):
+            entries = os.listdir(media_dir)
+            for entry in entries:
+                entry_path = os.path.join(media_dir, entry)
+                if os.path.ismount(entry_path):
+                    usb_drives.append(entry_path)
+        print(usb_drives[0])
+        # Get the current date and time
+        current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Initial file name with date and time
+        default_file_name = f"/data_{current_datetime}.png"
+        # Set the initial directory and default file name
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Figure", usb_drives[0]+ default_file_name , 
+                                                   "PNG Image (*.png);;JPEG Image (*.jpg);;All Files (*)")
+        if file_path:
+            self.canvas.figure.savefig(file_path)
+
 class AnalyzeError(Exception):
     pass
 class Analyze_mst(QDialog):
@@ -20,7 +49,10 @@ class Analyze_mst(QDialog):
         self.initUI()
     def initUI(self):
         self.setWindowTitle("Analyze")
-        
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.ax1 = self.figure.add_subplot(111)
+        self.ax2 = self.ax1.twinx()  
         self.setGeometry(200, 200, 300, 150)
         layout = QVBoxLayout()
         self.label_1 = QLabel('Average window size : ')
@@ -65,6 +97,7 @@ class Analyze_mst(QDialog):
         self.show_graph_window()
         #self.close()
         self.parent().showParameterValue(self.mst_a_b)
+        self.parent().show_graph_in_main_window(self.ax1, self.ax2)
         pass
 
     
@@ -165,7 +198,9 @@ class GraphWindow(QDialog):
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
+        self.toolbar = CustomNavigationToolbar(self.canvas, self)
         self.layout2.addWidget(self.canvas)
+        self.layout2.addWidget(self.toolbar)
         self.setLayout(self.layout2)
         self.generate_plot(self.path)
 
@@ -185,29 +220,30 @@ class GraphWindow(QDialog):
 
 
         # Plot the time series data
-        ax1 = self.figure.add_subplot(111)
+        self.ax1 = self.figure.add_subplot(111)
        
-        ax1.set_xlabel('Sec.')
-        ax1.set_ylabel('Cap', color='tab:red')
-        ax1.plot(df['NO'], df['MValue_Mean'], color='red', label='C')
-        ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='change rate')
-        ax1.tick_params(axis='y', labelcolor='tab:red')
+        self.ax1.set_xlabel('Sec.')
+        self.ax1.set_ylabel('Cap', color='tab:red')
+        self.ax1.plot(df['NO'], df['MValue_Mean'], color='red', label='C')
+        self.ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='change rate')
+        self.ax1.tick_params(axis='y', labelcolor='tab:red')
 
         for idx, peak in enumerate(top_peaks_MValue_Analyze):
-            #ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
-            ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
-            ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='gray', linestyle='--')
+            #self.ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
+            self.ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
+            self.ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='gray', linestyle='--')
             mst.append(df['NO'].iloc[peak[0]])
         for idx, peak in enumerate(top_peaks_SValue_Analyze):
-            #ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
-            ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
-            ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='pink', linestyle='--')
+            #self.ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
+            self.ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
+            self.ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='pink', linestyle='--')
             mst.append(df['NO'].iloc[peak[0]])
         print(mst)
-        ax2 = ax1.twinx()  # Create a new y-axis for Data2 and Data4
+        self.ax2 = self.ax1.twinx()  # Create a new y-axis for Data2 and Data4
         color = 'blue'
-        ax2.set_ylabel('tan \u03F4', color=color)
-        ax2.plot(df['NO'], df['SValue_Mean'], color=color, label='tan \u03F4')
-        ax2.plot(df['NO'], df['SValue_Analyze'], color='purple', label='SValue_Analyze')
-        ax2.tick_params(axis='y', labelcolor=color)
-        ax2.set_ylim(0, 3)
+        self.ax2.set_ylabel('tan \u03F4', color=color)
+        self.ax2.plot(df['NO'], df['SValue_Mean'], color=color, label='tan \u03F4')
+        self.ax2.plot(df['NO'], df['SValue_Analyze'], color='purple', label='SValue_Analyze')
+        self.ax2.tick_params(axis='y', labelcolor=color)
+        self.ax2.set_ylim(0, 3)
+        

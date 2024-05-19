@@ -16,7 +16,7 @@ import time
 import csv
 import os
 
-RCL = ['C:คุณสมบัติทางความจุไฟฟ้า','L:คุณสมบัติการเหนี่ยวนำ','R:คุณสมบัติความต้านทาน' ]
+
 state = False
 class WidgetGallery(QWidget):
         
@@ -30,27 +30,22 @@ class WidgetGallery(QWidget):
         self.str1 = 'C'
         self.str2 = 'D'
         self.str3 = '1kHz'
+        
     def initUI(self):
         self.timer=QTimer(self)
         self.timer_readSerial = QTimer(self)
-    
-        
+        self.hz_value = 1000
+        self.sum_time = 0
+        self.interval_time = 1
+        self.frist_time = 0
+        self.show_time = 0
         self.timer_readSerial.timeout.connect(self.read_serial)
-        self.timer_readSerial.start(1000)
+        self.timer_readSerial.start(self.hz_value)
 
         self.setFixedSize(QSize(800,480))
         self.setStyle(QStyleFactory.create('Fusion'))
-        self.styleComboBox = QComboBox(self)
-        self.styleComboBox.addItems(RCL)
-    
-        self.styleLabel = QLabel("ต้องการวัดค่าอนุภาคยางด้วยสมบัติทางไฟฟ้าแบบใด:")
-        self.styleLabel.setBuddy(self.styleComboBox)
-        self.styleComboBox.currentIndexChanged.connect(self.RCL_combo_selected)
         
-        #self.useStylePaletteCheckBox = QCheckBox("&Use style's standard palette")
-        #self.useStylePaletteCheckBox.setChecked(True)
 
-        disableWidgetsCheckBox = QCheckBox("&Disable widgets")
 
         self.createTopLeftGroupBox()
         self.createTopRightGroupBox()
@@ -58,27 +53,13 @@ class WidgetGallery(QWidget):
         self.createBottomRightGroupBox()
         self.InitialState()
 
-       # styleComboBox.textActivated.connect(self.changeStyle)
-       # self.useStylePaletteCheckBox.toggled.connect(self.changePalette)
-        disableWidgetsCheckBox.toggled.connect(self.topLeftGroupBox.setDisabled)
-        disableWidgetsCheckBox.toggled.connect(self.topRightGroupBox.setDisabled)
-        disableWidgetsCheckBox.toggled.connect(self.bottomLeftTabWidget.setDisabled)
-        disableWidgetsCheckBox.toggled.connect(self.bottomRightGroupBox.setDisabled)
-
-        topLayout = QHBoxLayout()
-        topLayout.addWidget(self.styleLabel)
-        topLayout.addWidget(self.styleComboBox)
-        topLayout.addStretch(1) 
-        #topLayout.addWidget(self.useStylePaletteCheckBox)
-        topLayout.addWidget(disableWidgetsCheckBox)
-
         mainLayout = QGridLayout()
-        mainLayout.addLayout(topLayout, 0, 0, 1, 2)
-        mainLayout.addWidget(self.topLeftGroupBox, 1, 0)
-        mainLayout.addWidget(self.topRightGroupBox, 1, 1)
-        mainLayout.addWidget(self.bottomLeftTabWidget, 2, 0)
-        mainLayout.addWidget(self.bottomRightGroupBox, 2, 1)
-        mainLayout.addWidget(self.progressBar, 3, 0, 1, 2)
+        
+        mainLayout.addWidget(self.topLeftGroupBox, 0, 0)
+        mainLayout.addWidget(self.topRightGroupBox, 0, 1)
+        mainLayout.addWidget(self.bottomLeftTabWidget, 1, 0)
+        mainLayout.addWidget(self.bottomRightGroupBox, 1, 1)
+        mainLayout.addWidget(self.progressBar, 2, 0, 1, 2)
         mainLayout.setRowStretch(1, 1)
         mainLayout.setRowStretch(2, 1)
         mainLayout.setColumnStretch(0, 1)
@@ -96,13 +77,15 @@ class WidgetGallery(QWidget):
         layout = QVBoxLayout()
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
+        
         layout.addWidget(self.canvas)
-        layout.addStretch(1)
+        #layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
+        
 
     def createTopRightGroupBox(self):
         self.topRightGroupBox = QGroupBox("การตั้งค่าการวัด ความเสถียรของยาง")
-
+        self.topRightGroupBox.setFixedWidth(300)
         defaultPushButton = QPushButton("Default Push Button")
         defaultPushButton.setDefault(True)
         H_W_ME = QWidget()
@@ -110,6 +93,7 @@ class WidgetGallery(QWidget):
         self.st_start_stopButton = QPushButton("START/STOP")
        
         self.sampling_label = QLabel("Sampling")
+        self.sampling_label.setStyleSheet("font-size: 10px")
         
         
         
@@ -126,7 +110,7 @@ class WidgetGallery(QWidget):
         h_w_me.addWidget(self.sampling_select)
         h_w_me.addWidget(self.st_start_stopButton)
       
-        self.st_start_stopButton.setStyleSheet("background-color: green; color: white; font-size: 16px;")
+        self.st_start_stopButton.setStyleSheet("background-color: green")
         self.st_start_stopButton.setCheckable(True)
         self.st_start_stopButton.setChecked(True)
         self.st_start_stopButton.clicked.connect(self.bt_start_stop)
@@ -176,31 +160,38 @@ class WidgetGallery(QWidget):
 
     def createBottomLeftTabWidget(self):
         self.bottomLeftTabWidget = QTabWidget()
-        self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,
-                QSizePolicy.Policy.Ignored)
+        self.bottomLeftTabWidget.setFixedHeight(180)
+        #self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Ignored)
 
-        tab1 = QWidget()
+        tab11 = QWidget()
+        tab1 = QGridLayout()
+        aaaa = QWidget()
         self.measure_1 = QLabel("C : ")
         self.measure_2 = QLabel("D : ")
-        self.measure_Feq = QLabel("Feq : ")
-        self.measure_Lev = QLabel("Lev : ")
+        self.measure_Feq = QLabel("Feq :")
+        self.measure_time = QLabel("Lev :")
+        self.measure_process = QLabel("Proc:")
         self.measure_1.setObjectName("Digital_meter")
         self.measure_2.setObjectName("Digital_meter")
-        self.measure_Feq.setObjectName("Digital_meter")
-        self.measure_Lev.setObjectName("Digital_meter")
-        tab1Vbox = QVBoxLayout()
-        tab1_3Hbox = QVBoxLayout()
+        self.measure_Feq.setObjectName("Digital_meter2")
+        self.measure_time.setObjectName("Digital_meter2")
+        self.measure_process.setObjectName("Digital_meter2")
+        self.measure_Feq.setFixedHeight(25)
+        self.measure_time.setFixedHeight(25)
+        self.measure_process.setFixedHeight(25)
+        tab1Hbox = QHBoxLayout(aaaa)
         #tab1Vbox.setContentsMargins(5, 5, 5, 5)
-        tab1Vbox.addWidget(self.measure_1)
-        tab1Vbox.addWidget(self.measure_2)
-        tab1_3Hbox.addWidget(self.measure_Feq)
-        tab1_3Hbox.addWidget(self.measure_Lev)
-        tab1Vbox.addLayout(tab1_3Hbox)
-        tab1.setLayout(tab1Vbox)
+        tab1Hbox.addWidget(self.measure_Feq)
+        tab1Hbox.addWidget(self.measure_time)
+        tab1Hbox.addWidget(self.measure_process)
+        tab1.addWidget(aaaa,0,0)
+        tab1.addWidget(self.measure_1,1,0,)
+        tab1.addWidget(self.measure_2,2,0)
+        tab11.setLayout(tab1)
 
         tab2 = QWidget()
         self.textEdit = QTextEdit()
-
+        self.textEdit.scrollContentsBy
         self.textEdit.setPlainText("null")
 
         tab2hbox = QHBoxLayout()
@@ -208,23 +199,17 @@ class WidgetGallery(QWidget):
         tab2hbox.addWidget(self.textEdit)
         tab2.setLayout(tab2hbox)
 
-        self.bottomLeftTabWidget.addTab(tab1, "Measure")
+        self.bottomLeftTabWidget.addTab(tab11, "Measure")
         self.bottomLeftTabWidget.addTab(tab2, "Table")
 
     def createBottomRightGroupBox(self):
         self.bottomRightGroupBox = QGroupBox("วิเคราะห์ค่าความเสถียรของอนุภาคยาง")
-
+        self.bottomRightGroupBox.setFixedHeight(180)
+        self.bottomRightGroupBox.setFixedWidth(300)
         label_a = QLabel("A :")
         label_b = QLabel("B :")
         self.lineEdit_a = QLineEdit()
         self.lineEdit_b = QLineEdit()
-
-        dialA = QDial()
-        dialA.setValue(30)
-        dialA.setNotchesVisible(True)
-        dialB = QDial()
-        dialB.setValue(30)
-        dialB.setNotchesVisible(True)
         A_B = QWidget()
         A_B_C = QWidget()
         Analiz_layout1 = QHBoxLayout(A_B)
@@ -237,7 +222,7 @@ class WidgetGallery(QWidget):
         Analiz_layout1.addWidget(self.load_mst_btn,1)
         Analiz_layout1.addWidget(self.analiz_mst_ntn,1)
         Analiz_layout1.addWidget(save_mst_btn,1)
-        
+        save_mst_btn.clicked.connect(self.save_file_csv)
         self.analiz_mst_ntn.clicked.connect(self.show_windows_analyze)
         self.load_mst_btn.clicked.connect(self.load_data)
         layout = QGridLayout()
@@ -247,8 +232,7 @@ class WidgetGallery(QWidget):
         layout.addWidget(self.lineEdit_a,1,1)
         layout.addWidget(label_b,2,0)
         layout.addWidget(self.lineEdit_b,2,1)        
-        layout.addWidget(dialA, 1, 2)
-        layout.addWidget(dialB, 2, 2)
+
      
         self.bottomRightGroupBox.setLayout(layout)
 
@@ -277,29 +261,33 @@ class WidgetGallery(QWidget):
         else:
             self.counter = 0
             self.open = 0
-            
+            self.sum_time = 0
+            self.show_time = 0
             while os.path.exists(self.file_path):
                 self.counter += 1
                 self.file_path = f"/home/mst/mst_app/data/output{self.counter}.csv"
 
             self.progressBar.setValue(0)
             self.st_start_stopButton.setText("STOP")
-            self.st_start_stopButton.setStyleSheet("background-color: red; color: white")
-            self.timer.start(1000)
+            self.st_start_stopButton.setStyleSheet("background-color: red")
+            self.timer.start(self.hz_value)
             self.timer.timeout.connect(self.advanceProgressBar)
 
         if self.timer_readSerial.isActive() :
             self.timer_readSerial.stop()
             self.timer_readSerial.timeout.disconnect(self.read_serial)
         else : 
-            self.timer_readSerial.start(1000)
+            self.timer_readSerial.start(self.hz_value)
             self.timer_readSerial.timeout.connect(self.read_serial)
 
     def advanceProgressBar(self):
         curVal = self.progressBar.value()
         maxVal = self.progressBar.maximum()
-        self.progressBar.setValue(curVal + 1)
-        print(curVal)
+        
+        self.sum_time = self.interval_time  + self.sum_time
+        self.show_time = self.sum_time 
+        self.measure_time.setText(str(self.show_time))
+        self.progressBar.setValue(int(self.show_time))
         
         self.data = self.s.read_meter()
         self.show_meter(self.data)
@@ -308,30 +296,26 @@ class WidgetGallery(QWidget):
             if not self.open:
                 writer.writerow(['NO', 'MValue', 'SValue'])
                 self.open = 1
-            writer.writerow([curVal, "{:.2f}".format(self.data[0]),"{:.2f}".format(self.data[1])])
+            writer.writerow([self.show_time, "{:.2f}".format(self.data[0]),"{:.2f}".format(self.data[1])])
         try:
             with open(self.file_path, 'r') as file:
                 data_string = file.read()
                 data = pd.read_csv(self.file_path) if self.file_path.endswith('.csv') else pd.read_csv(self.file_path, delimiter='\t')
                 self.textEdit.setPlainText(data_string)
+                cursor = self.textEdit.textCursor()
+                cursor.movePosition(cursor.End)
+                self.textEdit.setTextCursor(cursor)
+                self.textEdit.ensureCursorVisible()
                 self.plot_data(data)
         except Exception as e:
                 print("Error:", e)
 
 
-        if curVal >= 1200 :
+        if int(self.show_time) >= 1200 :
             self.bt_start_stop()
             print(f"CSV file '{self.file_path}' generated successfully!")
 
-    def RCL_combo_selected(self):        
-        select_RCL = self.styleComboBox.currentIndex()
-        if select_RCL == 0:
-            pass
-        if select_RCL == 1:
-            pass
-        if select_RCL == 2:
-            pass
-        print(select_RCL)
+  
     def RCL_radiobox_selected(self):
         pass
     def Para2_radiobox_selected(self):
@@ -341,6 +325,17 @@ class WidgetGallery(QWidget):
     def Sampling_selected(self):
         sampling_sl = self.sampling_select.currentIndex()
         print(sampling_sl)
+        if sampling_sl == 0 : 
+            self.hz_value = 1000
+            self.interval_time = 1
+        if sampling_sl == 1 :
+            self.hz_value = 2000
+            self.interval_time = 2
+        if sampling_sl == 2 :
+            self.hz_value = 500
+            self.interval_time = 0.5
+        self.timer.start(self.hz_value)
+        self.timer_readSerial.start(self.hz_value)
         pass
 
     def set_data(self):    
@@ -348,11 +343,9 @@ class WidgetGallery(QWidget):
         self.str2 = self.comboBox2.currentText()
         self.str3 = self.comboBox3.currentText()
         self.s.set_meter(self.str1)
-        time.sleep(0.01)
         self.s.set_meter(self.str2)
-        time.sleep(0.01)
         self.s.set_meter(self.str3)
-        time.sleep(0.01)
+        
         pass
 
     def plot_data(self, data):
@@ -362,10 +355,10 @@ class WidgetGallery(QWidget):
         ax2 = ax.twinx()
         ax2.plot(data.iloc[:, 0], data.iloc[:, 2],'-b')  # Plot 3rd column
         ax2.set_ylabel('tan \u03F4', color='r')
-        ax.set_title('Data Plot', fontsize=3)
-        ax.set_xlabel('time(0.5sec)', fontsize=3)
+        ax.set_title('Data Plot', fontsize=5)
+        ax.set_xlabel('time(0.5sec)', fontsize=5)
         ax.set_ylabel('CSP', fontsize=3,color='r')
-        ax.legend()
+        #ax.legend()
         self.canvas.draw()
 
         pass
@@ -396,7 +389,11 @@ class WidgetGallery(QWidget):
         self.measure_1.setText(self.str1 +':'+"{:.2f}".format(data[0]))
         self.measure_2.setText(self.str2 +':'+"{:.2f}".format(data[1]))
         self.measure_Feq.setText('FREQ : '+ self.str3)
-        self.measure_Lev.setText('LEV : 1.0V')
+        self.measure_time.setText('Time: '+ "{:.1f}".format(self.show_time)+'s')
+        self.measure_process.setText('Proc:'+"{:.1f}".format(self.show_time/1200.0*100.0)+'%')
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + \
+                       f".{int(time.time() * 1000) % 10000:03d}"
+        self.topLeftGroupBox.setTitle("กราฟแสดงค่าการวัด "+ str(current_time))
         pass
 
     def keyPressEvent(self, event):
@@ -405,6 +402,7 @@ class WidgetGallery(QWidget):
     def show_windows_analyze(self):
         self.window_analyze = Analyze_mst(self,file_path_csv=self.file_path)
         self.window_analyze.show()
+
         pass
 
     def showParameterValue(self, data):
@@ -412,8 +410,41 @@ class WidgetGallery(QWidget):
         self.lineEdit_b.setText(str(data[1]))
         pass
 
-    def when_radiobutton_click(self,sender):
+    def show_graph_in_main_window(self, a, b):
+        print(a)
+        print(b)
+        pass
+
+
+    def save_file_csv(self):
+        usb_drives = []
+        media_dir = "/media/mst"
+        if os.path.exists(media_dir):
+            entries = os.listdir(media_dir)
+            for entry in entries:
+                entry_path = os.path.join(media_dir, entry)
+                if os.path.ismount(entry_path):
+                    usb_drives.append(entry_path)
+        print(usb_drives[0])
+        # Get the current date and time
+        current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Initial file name with date and time
+        default_file_name = f"/data_{current_datetime}.csv"
+        file_path, _ = QFileDialog.getSaveFileName(self,"save Data", usb_drives[0]+default_file_name, "CSV Files (*.csv)")
         
+
+        if file_path:
+            # Write data to the CSV file
+            try:
+                with open(file_path, 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    Text = self.textEdit.toPlainText()
+                    writer.writerows(Text)
+                QMessageBox.information(self, 'Success', 'Data saved to CSV file.')
+                QFileDialog.setDirectory(self, self.file_path)
+            except Exception as e:
+                QMessageBox.critical(self, 'Error', f'Failed to save data: {str(e)}')
         pass
 
 if __name__ == '__main__':
@@ -431,6 +462,15 @@ if __name__ == '__main__':
             }
             #Digital_meter{
                 font-size : 20px;
+                font-family: Courier;  
+                font-weight: bold;
+                background-color: black;
+                color: yellow;
+                border: 2px solid yellow;
+                border-radius: 10px;
+            }
+            #Digital_meter2{
+                font-size : 15px;
                 font-family: Courier;  
                 font-weight: bold;
                 background-color: black;
