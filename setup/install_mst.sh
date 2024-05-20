@@ -39,7 +39,7 @@ sudo cp /home/$(whoami)/mst_app/setup/mst.rules /etc/udev/rules.d/
 
 echo "Copying .desktop file..."
 # Copy .desktop file
-cp /home/$(whoami)/mst_app/setup/mst_app.desktop ~/.local/share/applications/
+cp /home/$(whoami)/mst_app/setup/mst_app.desktop /home/$(whoami)/Desktop
 # Check if copy was successful
 if [ $? -eq 0 ]; then
     echo ".desktop file copied successfully."

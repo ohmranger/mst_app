@@ -419,13 +419,16 @@ class WidgetGallery(QWidget):
     def save_file_csv(self):
         usb_drives = []
         media_dir = "/media/mst"
-        if os.path.exists(media_dir):
-            entries = os.listdir(media_dir)
-            for entry in entries:
-                entry_path = os.path.join(media_dir, entry)
-                if os.path.ismount(entry_path):
-                    usb_drives.append(entry_path)
-        print(usb_drives[0])
+        try :
+            with os.path.exists(media_dir):
+                 entries = os.listdir(media_dir)
+                 for entry in entries:
+                     entry_path = os.path.join(media_dir, entry)
+                     if os.path.ismount(entry_path):
+                         usb_drives.append(entry_path)
+            print(usb_drives[0])
+        except Exception as e:
+            pass
         # Get the current date and time
         current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
 
