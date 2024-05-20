@@ -7,7 +7,7 @@ class SerialConnectionError(Exception):
     pass
 
 class Serial_mst:
-    def __init__(self, port= '/dev/ttyUSB0', baud_rate = 9600, para1st = 'FUNCtion: IMPA C', para2nd = 'FUNCtion: IMPB D',freq ='FREQuency 1000', sampling_rate='APERture SLOW', volt_lv='VOLTage 1.0'):
+    def __init__(self, port= '/dev/mst/meter', baud_rate = 9600, para1st = 'FUNCtion: IMPA C', para2nd = 'FUNCtion: IMPB D',freq ='FREQuency 1000', sampling_rate='APERture SLOW', volt_lv='VOLTage 1.0'):
         
         self.set_data = [['C','FUNCtion: IMPA C'],['L','FUNCtion: IMPA L'],['R','FUNCtion: IMPA R']
                          ,['D','FUNCtion: IMPB D'],['Q','FUNCtion: IMPB Q'],['\u03F4','FUNCtion: IMPB RAD'],['ESR','FUNCtion: IMPB ESR']

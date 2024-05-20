@@ -15,7 +15,8 @@ fi
 
 echo "Creating directory..."
 # Create directory
-mkdir -p /home/$(whoami)/mst_app
+mkdir -p /home/$(whoami)/mst_app/data
+mkdir -p /home/$(whoami)/mst_app/analyze
 
 # Check if directory creation was successful
 if [ $? -eq 0 ]; then
@@ -25,7 +26,12 @@ else
     exit 1
 fi
 
+
 echo "Setup complete."
+
+echo " coppy udev rules"
+
+sudo cp /home/$(whoami)/mst_app/setup/mst.rules /etc/udev/rules.d/
 
 
 # Clone Program file at /ohmranger
@@ -53,7 +59,19 @@ else
     exit 1
 fi
 
+# Install Services Mst_app
+echo "Install Services App"
+# create environment file
+source ~/.bashrc 
+bash --login -c 'env > ~/mst_app/setup/services/mst.env' 
+sudo cp /home/$(whoami)/mst_app/setup/services/mst.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable mst.service
 echo "Setup complete."
+echo "Reboot Now"
+sleep 5
+sudo reboot
+
 # coppy .Desktop file for run application by desktop
 #sudo cp /home/$(whoami)/mst_app/setup/mst_app.desktop ~/.local/share/applications/
 #sudo chmod +x ~/.local/share/applications/mst_app.desktop

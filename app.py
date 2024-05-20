@@ -25,7 +25,7 @@ class WidgetGallery(QWidget):
         
         super().__init__()
         self.initUI()
-        self.s = Serial_mst(port='/dev/ttyUSB0')
+        self.s = Serial_mst(port='/dev/mst/meter')
         self.file_path = "/home/mst/mst_app/data/output.csv"
         self.str1 = 'C'
         self.str2 = 'D'
