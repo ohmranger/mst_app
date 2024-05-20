@@ -419,6 +419,9 @@ class WidgetGallery(QWidget):
     def save_file_csv(self):
         usb_drives = []
         media_dir = "/media/mst"
+        current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
+        # Initial file name with date and time
+        default_file_name = f"/data_{current_datetime}.csv"
         try :
             with os.path.exists(media_dir):
                  entries = os.listdir(media_dir)
@@ -427,14 +430,13 @@ class WidgetGallery(QWidget):
                      if os.path.ismount(entry_path):
                          usb_drives.append(entry_path)
             print(usb_drives[0])
+            str_path = str(usb_drives[0])+default_file_name
         except Exception as e:
-            pass
-        # Get the current date and time
-        current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
-
-        # Initial file name with date and time
-        default_file_name = f"/data_{current_datetime}.csv"
-        file_path, _ = QFileDialog.getSaveFileName(self,"save Data", usb_drives[0]+default_file_name, "CSV Files (*.csv)")
+                print("parth error")
+                str_path = f"data_{current_datetime}.csv"
+            
+            
+        file_path, _ = QFileDialog.getSaveFileName(self,"save Data",str_path, "CSV Files (*.csv)")
         
 
         if file_path:

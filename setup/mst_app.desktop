@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=MST App
-Exec=/usr/bin/python3 /home/mst/mst_app/app.py
-Icon=/home/$(whoami)/mst_app/mst_logo.png
+Exec=lxterminal -e python3 "/home/mst/mst_app/app.py"
+Icon=/home/mst/mst_app/mst_logo.png
 Type=Application
 Terminal=false

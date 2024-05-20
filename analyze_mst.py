@@ -17,24 +17,28 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
     def save_figure(self):
         usb_drives = []
         media_dir = "/media/mst"
-        if os.path.exists(media_dir):
-            entries = os.listdir(media_dir)
-            for entry in entries:
-                entry_path = os.path.join(media_dir, entry)
-                if os.path.ismount(entry_path):
-                    usb_drives.append(entry_path)
-        print(usb_drives[0])
-        # Get the current date and time
         current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
-
         # Initial file name with date and time
-        default_file_name = f"/data_{current_datetime}.png"
-        # Set the initial directory and default file name
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Figure", usb_drives[0]+ default_file_name , 
+        default_file_name = f"/data_{current_datetime}.csv"
+        try :
+            with os.path.exists(media_dir):
+                 entries = os.listdir(media_dir)
+                 for entry in entries:
+                     entry_path = os.path.join(media_dir, entry)
+                     if os.path.ismount(entry_path):
+                         usb_drives.append(entry_path)
+            print(usb_drives[0])
+            str_path = str(usb_drives[0])+default_file_name
+        except Exception as e:
+                print("parth error")
+                str_path = f"data_{current_datetime}.png"
+            
+            
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Figure", str_path , 
                                                    "PNG Image (*.png);;JPEG Image (*.jpg);;All Files (*)")
         if file_path:
             self.canvas.figure.savefig(file_path)
-
+            
 class AnalyzeError(Exception):
     pass
 class Analyze_mst(QDialog):
