@@ -51,7 +51,7 @@ fi
 
 echo "Setting permissions..."
 # Set permissions
-chmod +x ~/.local/share/applications/mst_app.desktop
+chmod +x /home/$(whoami)/Desktop/mst_app.desktop
 # Check if setting permissions was successful
 if [ $? -eq 0 ]; then
     echo "Permissions set successfully."
@@ -69,9 +69,9 @@ bash --login -c 'env > ~/mst_app/setup/services/mst.env'
 #sudo systemctl daemon-reload
 #sudo systemctl enable mst.service
 #echo "Setup complete."
-#echo "Reboot Now"
-#leep 5
-#sudo reboot
+echo "Reboot Now"
+sleep 5
+sudo reboot
 
 # coppy .Desktop file for run application by desktop
 #sudo cp /home/$(whoami)/mst_app/setup/mst_app.desktop ~/.local/share/applications/
