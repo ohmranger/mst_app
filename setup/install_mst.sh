@@ -38,6 +38,7 @@ sudo cp /home/$(whoami)/mst_app/setup/mst.rules /etc/udev/rules.d/
 
 
 echo "Copying .desktop file..."
+sudo scp /home/mst/mst_app/splash.png /usr/share/plymouth/themes/pix/splash.png
 # Copy .desktop file
 cp /home/$(whoami)/mst_app/setup/mst_app.desktop /home/$(whoami)/Desktop
 # Check if copy was successful
@@ -64,13 +65,13 @@ echo "Install Services App"
 # create environment file
 source ~/.bashrc 
 bash --login -c 'env > ~/mst_app/setup/services/mst.env' 
-sudo cp /home/$(whoami)/mst_app/setup/services/mst.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable mst.service
-echo "Setup complete."
-echo "Reboot Now"
-sleep 5
-sudo reboot
+#sudo cp /home/$(whoami)/mst_app/setup/services/mst.service /etc/systemd/system/
+#sudo systemctl daemon-reload
+#sudo systemctl enable mst.service
+#echo "Setup complete."
+#echo "Reboot Now"
+#leep 5
+#sudo reboot
 
 # coppy .Desktop file for run application by desktop
 #sudo cp /home/$(whoami)/mst_app/setup/mst_app.desktop ~/.local/share/applications/
