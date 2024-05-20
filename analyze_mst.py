@@ -21,7 +21,7 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
         # Initial file name with date and time
         default_file_name = f"/data_{current_datetime}.csv"
         try :
-            with os.path.exists(media_dir):
+            if os.path.exists(media_dir):
                  entries = os.listdir(media_dir)
                  for entry in entries:
                      entry_path = os.path.join(media_dir, entry)

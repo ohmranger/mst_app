@@ -27,6 +27,7 @@ class WidgetGallery(QWidget):
         self.initUI()
         self.s = Serial_mst(port='/dev/mst/meter')
         self.file_path = "/home/mst/mst_app/data/output.csv"
+        self.picture_path ="/home/mst/mst_app/data/output.jpg"
         self.str1 = 'C'
         self.str2 = 'D'
         self.str3 = '1kHz'
@@ -39,6 +40,7 @@ class WidgetGallery(QWidget):
         self.interval_time = 1
         self.frist_time = 0
         self.show_time = 0
+        self.set_fixHight = 150
         self.timer_readSerial.timeout.connect(self.read_serial)
         self.timer_readSerial.start(self.hz_value)
 
@@ -93,7 +95,7 @@ class WidgetGallery(QWidget):
         self.st_start_stopButton = QPushButton("START/STOP")
        
         self.sampling_label = QLabel("Sampling")
-        self.sampling_label.setStyleSheet("font-size: 10px")
+        #self.sampling_label.setStyleSheet("font-size: 10px")
         
         
         
@@ -114,7 +116,7 @@ class WidgetGallery(QWidget):
         self.st_start_stopButton.setCheckable(True)
         self.st_start_stopButton.setChecked(True)
         self.st_start_stopButton.clicked.connect(self.bt_start_stop)
-        self.st_start_stopButton.setFixedSize(180,25)
+        self.st_start_stopButton.setFixedSize(100,25)
 
         M_F = QGroupBox("C/L/R")
         M_S = QGroupBox("D/Q/\u03F4/ESR")
@@ -160,7 +162,7 @@ class WidgetGallery(QWidget):
 
     def createBottomLeftTabWidget(self):
         self.bottomLeftTabWidget = QTabWidget()
-        self.bottomLeftTabWidget.setFixedHeight(180)
+        self.bottomLeftTabWidget.setFixedHeight(self.set_fixHight)
         #self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Ignored)
 
         tab11 = QWidget()
@@ -204,7 +206,7 @@ class WidgetGallery(QWidget):
 
     def createBottomRightGroupBox(self):
         self.bottomRightGroupBox = QGroupBox("วิเคราะห์ค่าความเสถียรของอนุภาคยาง")
-        self.bottomRightGroupBox.setFixedHeight(180)
+        self.bottomRightGroupBox.setFixedHeight(self.set_fixHight)
         self.bottomRightGroupBox.setFixedWidth(300)
         label_a = QLabel("A :")
         label_b = QLabel("B :")
@@ -360,6 +362,9 @@ class WidgetGallery(QWidget):
         ax.set_ylabel('CSP', fontsize=3,color='r')
         #ax.legend()
         self.canvas.draw()
+        self.picture_path = f"/home/mst/mst_app/data/output{self.counter}.jpg"
+        self.canvas.figure.savefig(f"{self.picture_path}", format='jpg')
+        
 
         pass
     def load_data(self):
@@ -423,7 +428,7 @@ class WidgetGallery(QWidget):
         # Initial file name with date and time
         default_file_name = f"/data_{current_datetime}.csv"
         try :
-            with os.path.exists(media_dir):
+            if os.path.exists(media_dir):
                  entries = os.listdir(media_dir)
                  for entry in entries:
                      entry_path = os.path.join(media_dir, entry)

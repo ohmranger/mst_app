@@ -65,10 +65,11 @@ echo "Install Services App"
 # create environment file
 source ~/.bashrc 
 bash --login -c 'env > ~/mst_app/setup/services/mst.env' 
-#sudo cp /home/$(whoami)/mst_app/setup/services/mst.service /etc/systemd/system/
-#sudo systemctl daemon-reload
-#sudo systemctl enable mst.service
-#echo "Setup complete."
+sudo cp /home/$(whoami)/mst_app/setup/services/mst.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable mst.service
+
+echo "Setup complete."
 echo "Reboot Now"
 sleep 5
 sudo reboot
