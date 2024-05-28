@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT 
 
 from scipy.signal import find_peaks
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel,QSpinBox ,QWidget, QFileDialog
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel,QSpinBox ,QWidget, QFileDialog, QMessageBox
 import os
 import time
 
@@ -19,7 +19,7 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
         media_dir = "/media/mst"
         current_datetime = time.strftime("%Y-%m-%d_%H-%M-%S")
         # Initial file name with date and time
-        default_file_name = f"/data_{current_datetime}.csv"
+        default_file_name = f"/data_{current_datetime}.png"
         try :
             if os.path.exists(media_dir):
                  entries = os.listdir(media_dir)
@@ -58,7 +58,7 @@ class Analyze_mst(QDialog):
         self.ax1 = self.figure.add_subplot(111)
         self.ax2 = self.ax1.twinx()  
         self.setGeometry(200, 200, 300, 150)
-        layout = QVBoxLayout()
+        self.layout = QVBoxLayout()
         self.label_1 = QLabel('Average window size : ')
         self.label_2 = QLabel('Rate of Change periods : ')
         self.label_3 = QLabel('Start Analyze of x : ')
@@ -69,25 +69,25 @@ class Analyze_mst(QDialog):
         self.parameter_4 = QSpinBox()
         self.parameter_1.setValue(self.window_size)
         self.parameter_2.setValue(self.periods)
-        self.parameter_3.setMaximum(1000)
+        self.parameter_3.setMaximum(2000)
         self.parameter_3.setValue(self.fillter_x)
-        self.parameter_4.setMaximum(1000)
+        self.parameter_4.setMaximum(100)
         self.parameter_4.setValue(self.limit_y)
 
-        layout.addWidget(self.label_1)
-        layout.addWidget(self.parameter_1)
-        layout.addWidget(self.label_2)
-        layout.addWidget(self.parameter_2)
-        layout.addWidget(self.label_3)
-        layout.addWidget(self.parameter_3)
-        layout.addWidget(self.label_4)
-        layout.addWidget(self.parameter_4)
+        self.layout.addWidget(self.label_1)
+        self.layout.addWidget(self.parameter_1)
+        self.layout.addWidget(self.label_2)
+        self.layout.addWidget(self.parameter_2)
+        self.layout.addWidget(self.label_3)
+        self.layout.addWidget(self.parameter_3)
+        self.layout.addWidget(self.label_4)
+        self.layout.addWidget(self.parameter_4)
 
         self.submit_button = QPushButton("Analyze MST", self)
         self.submit_button.clicked.connect(self.closeAndReturn_mst)
-        layout.addWidget(self.submit_button)
-
-        self.setLayout(layout)
+        self.layout.addWidget(self.submit_button)
+        
+        self.setLayout(self.layout)
 
         pass
 
@@ -97,12 +97,14 @@ class Analyze_mst(QDialog):
         self.fillter_x = self.parameter_3.value()
         self.limit_y = self.parameter_4.value()
         self.Analyze_mst(self.file_path_csv)
-
+        print("fillter_x"+ str(self.fillter_x))
         self.show_graph_window()
         #self.close()
         self.parent().showParameterValue(self.mst_a_b)
         self.parent().show_graph_in_main_window(self.ax1, self.ax2)
+        
         pass
+
 
     
     def Analyze_mst(self, path_file_csv):
@@ -139,6 +141,13 @@ class Analyze_mst(QDialog):
             avg = sum(group) / len(group)
             averages.append(avg)
         return averages
+    def find_min(self, two_tuples):
+        lowest_values = []
+        for group in two_tuples:
+            lowest_value = min(group)
+            lowest_values.append(lowest_value)
+        return lowest_values
+
     def classify_into_groups(self, data):
         groups = {}
         for value in data:
@@ -149,13 +158,15 @@ class Analyze_mst(QDialog):
         return tuple(groups.values())
     
     def plot_mst(self, file_path):
+        a = 0
+        b = 0
         df = pd.read_csv(file_path)
         peaks_MValue_Analyze, _ = find_peaks(df['MValue_Analyze'].dropna(), height=0)
-        peaks_MValue_Analyze = [peak for peak in peaks_MValue_Analyze if df['NO'].iloc[peak] > 500]
+        peaks_MValue_Analyze = [peak for peak in peaks_MValue_Analyze if df['NO'].iloc[peak] > self.fillter_x]
         top_peaks_MValue_Analyze = sorted(zip(peaks_MValue_Analyze, df['MValue_Analyze'].iloc[peaks_MValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
 
         peaks_SValue_Analyze, _ = find_peaks(df['SValue_Analyze'].dropna(), height=0)
-        peaks_SValue_Analyze = [peak for peak in peaks_SValue_Analyze if df['NO'].iloc[peak] > 500]
+        peaks_SValue_Analyze = [peak for peak in peaks_SValue_Analyze if df['NO'].iloc[peak] > self.fillter_x]
         top_peaks_SValue_Analyze = sorted(zip(peaks_SValue_Analyze, df['SValue_Analyze'].iloc[peaks_SValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
 
         mst = []
@@ -174,14 +185,22 @@ class Analyze_mst(QDialog):
 
         # Select two tuples with two members each
         two_tuples = self.select_two_tuples(grouped_data)
-
+        print("two_tuples" + str(two_tuples))
         # Calculate average for each tuple
-        averages = self.calculate_average(two_tuples)
+        averages = self.find_min(two_tuples)
 
         # Print the averages
         print("Averages of selected tuples:", averages)
-
-        return averages[0],averages[1]
+        if len(averages) == 0:
+            QMessageBox.critical(self,"ผิดพลาด","ไม่สามารถหาจุดเปลี่ยนของกราฟได้")
+        elif len(averages)  == 1:
+            QMessageBox.warning(self,"แจ้งเตือน","พบการเปลี่ยนแปลงของกราฟ 1 ตำแหน่ง")
+            a = averages[0]
+            b = 0
+        elif len(averages)  >= 2:
+            a = averages[0]
+            b = averages[1]
+        return a,b
     
     def show_graph_window(self):
         self.graph_window = GraphWindow(path=self.file_path)
@@ -250,4 +269,5 @@ class GraphWindow(QDialog):
         self.ax2.plot(df['NO'], df['SValue_Analyze'], color='purple', label='SValue_Analyze')
         self.ax2.tick_params(axis='y', labelcolor=color)
         self.ax2.set_ylim(0, 3)
+      
         

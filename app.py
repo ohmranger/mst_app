@@ -396,9 +396,8 @@ class WidgetGallery(QWidget):
         self.measure_Feq.setText('FREQ : '+ self.str3)
         self.measure_time.setText('Time: '+ "{:.1f}".format(self.show_time)+'s')
         self.measure_process.setText('Proc:'+"{:.1f}".format(self.show_time/1200.0*100.0)+'%')
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + \
-                       f".{int(time.time() * 1000) % 10000:03d}"
-        self.topLeftGroupBox.setTitle("กราฟแสดงค่าการวัด "+ str(current_time))
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        self.topLeftGroupBox.setTitle("กราฟแสดงค่าการวัด   วันเวลา"+ str(current_time))
         pass
 
     def keyPressEvent(self, event):
