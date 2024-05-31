@@ -35,7 +35,8 @@ class Serial_mst:
                 rounded_values.append(float(value))
             except ValueError:
                 pass #rounded_values.append(value)
-        return rounded_values[0]*10e5, rounded_values[1]
+        return rounded_values[0], rounded_values[1]
+
     def set_meter(self, data):
         if data in self.set_data_dic : 
             self.serial_port.write((self.set_data_dic[data] + '\n').encode())

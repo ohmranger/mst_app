@@ -31,7 +31,8 @@ class WidgetGallery(QWidget):
         self.str1 = 'C'
         self.str2 = 'D'
         self.str3 = '1kHz'
-        
+        self.str1_1 = "F"
+        self.str2_1 = ""
     def initUI(self):
         self.timer=QTimer(self)
         self.timer_readSerial = QTimer(self)
@@ -41,6 +42,8 @@ class WidgetGallery(QWidget):
         self.frist_time = 0
         self.show_time = 0
         self.set_fixHight = 150
+        self.time_end = 99999
+
         self.timer_readSerial.timeout.connect(self.read_serial)
         self.timer_readSerial.start(self.hz_value)
 
@@ -61,7 +64,6 @@ class WidgetGallery(QWidget):
         mainLayout.addWidget(self.topRightGroupBox, 0, 1)
         mainLayout.addWidget(self.bottomLeftTabWidget, 1, 0)
         mainLayout.addWidget(self.bottomRightGroupBox, 1, 1)
-        mainLayout.addWidget(self.progressBar, 2, 0, 1, 2)
         mainLayout.setRowStretch(1, 1)
         mainLayout.setRowStretch(2, 1)
         mainLayout.setColumnStretch(0, 1)
@@ -91,9 +93,19 @@ class WidgetGallery(QWidget):
         defaultPushButton = QPushButton("Default Push Button")
         defaultPushButton.setDefault(True)
         H_W_ME = QWidget()
+        H_H_ME = QWidget()
         h_w_me = QHBoxLayout(H_W_ME)
+        self.h_comboBox_select_time = QHBoxLayout(H_H_ME)
         self.st_start_stopButton = QPushButton("START/STOP")
-       
+        self.comboBox_selected_time = QComboBox(self)
+        self.Label_select_time = QLabel("เลือกระยะเวลา")
+        self.comboBox_selected_time.addItems(["None","1000sec","1200sec","1500sec","1800sec"])
+        self.comboBox_selected_time.setCurrentIndex(0)
+        self.comboBox_selected_time.currentIndexChanged.connect(self.time_selected)
+        self.h_comboBox_select_time.addWidget(self.Label_select_time)
+        self.h_comboBox_select_time.addWidget(self.comboBox_selected_time)
+
+        #self.calibrate_Button.clicked.connect()
         self.sampling_label = QLabel("Sampling")
         #self.sampling_label.setStyleSheet("font-size: 10px")
         
@@ -155,6 +167,7 @@ class WidgetGallery(QWidget):
         hlayout.addWidget(M_Hz)
         layout.addWidget(horizontal_widget)
         #layout.addWidget(defaultPushButton)
+        layout.addWidget(H_H_ME)
         layout.addWidget(H_W_ME)
         #layout.addWidget(flatPushButton)
         layout.addStretch(5)
@@ -244,11 +257,23 @@ class WidgetGallery(QWidget):
 
     def printComboBox2(self):
         print("Second ComboBox selected: " + self.comboBox2.currentText())
+    def time_selected(self):
+        if self.comboBox_selected_time.currentText() == "None" :
+            self.time_end = 99999
+        if self.comboBox_selected_time.currentText() == "1000sec":
+            self.time_end = 1000
+        if self.comboBox_selected_time.currentText() == "1200sec":
+            self.time_end = 1200
+        if self.comboBox_selected_time.currentText() == "1500sec":
+            self.time_end = 1500
+        if self.comboBox_selected_time.currentText() == "1800sec":
+            self.time_end = 1800
 
-
+        self.progressBar.setRange(0,self.time_end)
+        print("show end time : " + str(self.time_end))
     def InitialState(self):
         self.progressBar = QProgressBar()
-        self.progressBar.setRange(0, 1200)
+        self.progressBar.setRange(0, self.time_end)
         self.progressBar.setValue(0)
 
     
@@ -313,7 +338,7 @@ class WidgetGallery(QWidget):
                 print("Error:", e)
 
 
-        if int(self.show_time) >= 1200 :
+        if int(self.show_time) >= self.time_end :
             self.bt_start_stop()
             print(f"CSV file '{self.file_path}' generated successfully!")
 
@@ -347,7 +372,21 @@ class WidgetGallery(QWidget):
         self.s.set_meter(self.str1)
         self.s.set_meter(self.str2)
         self.s.set_meter(self.str3)
-        
+        if self.str1 ==  "C" :
+            self.str1_1 = "F"
+        if self.str1 ==  "L" :
+            self.str1_1 = "H"
+        if self.str1 ==  "R" :
+            self.str1_1 = "\u03A9"
+
+        if self.str2 ==  "D" : 
+            self.str2_1 = ""
+        if self.str2 ==  "Q" :
+            self.str2_1 = ""
+        if self.str2 ==  "\u03F4" :
+            self.str2_1 = "Rad"
+        if self.str2 ==  "ESR" :
+            self.str2_1 = "\u03A9"
         pass
 
     def plot_data(self, data):
@@ -359,7 +398,7 @@ class WidgetGallery(QWidget):
         ax2.set_ylabel('tan \u03F4', color='r')
         ax.set_title('Data Plot', fontsize=5)
         ax.set_xlabel('time(0.5sec)', fontsize=5)
-        ax.set_ylabel('CSP', fontsize=3,color='r')
+        ax.set_ylabel('Capacitive',color='r')
         #ax.legend()
         self.canvas.draw()
         self.picture_path = f"/home/mst/mst_app/data/output{self.counter}.jpg"
@@ -391,11 +430,11 @@ class WidgetGallery(QWidget):
         
         pass
     def show_meter(self, data):
-        self.measure_1.setText(self.str1 +':'+"{:.2f}".format(data[0]))
-        self.measure_2.setText(self.str2 +':'+"{:.2f}".format(data[1]))
+        self.measure_1.setText(self.str1 +':'+"{}".format(data[0])+self.str1_1)
+        self.measure_2.setText(self.str2 +':'+"{}".format(data[1])+self.str2_1)
         self.measure_Feq.setText('FREQ : '+ self.str3)
         self.measure_time.setText('Time: '+ "{:.1f}".format(self.show_time)+'s')
-        self.measure_process.setText('Proc:'+"{:.1f}".format(self.show_time/1200.0*100.0)+'%')
+        self.measure_process.setText('Proc:'+"{:.1f}".format(self.show_time/self.time_end*100.0)+'%')
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
         self.topLeftGroupBox.setTitle("กราฟแสดงค่าการวัด   วันเวลา"+ str(current_time))
         pass
