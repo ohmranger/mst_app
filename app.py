@@ -323,7 +323,7 @@ class WidgetGallery(QWidget):
             if not self.open:
                 writer.writerow(['NO', 'MValue', 'SValue'])
                 self.open = 1
-            writer.writerow([self.show_time, "{:.2f}".format(self.data[0]),"{:.2f}".format(self.data[1])])
+            writer.writerow([self.show_time, "{}".format(self.data[0]),"{}".format(self.data[1])])
         try:
             with open(self.file_path, 'r') as file:
                 data_string = file.read()
