@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT 
 
 from scipy.signal import find_peaks
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel,QSpinBox ,QWidget, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel, QSpinBox ,QWidget, QFileDialog, QMessageBox
 import os
 import time
 
@@ -42,15 +42,20 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
 class AnalyzeError(Exception):
     pass
 class Analyze_mst(QDialog):
-    def __init__(self,parent=None,file_path_csv = None, window_size = 12,periods=2,fillter_x=500,limit_y=100):
+    def __init__(self,parent=None,file_path_csv = None, window_size = 12,periods=2,fillter_x1=700,fillter_x2=1200,limit_y=100):
         super().__init__(parent)
         self.window_size = window_size
         self.periods = periods
-        self.fillter_x = fillter_x
-        self.limit_y = limit_y
+        self.fillter_x1 = fillter_x1
+        self.fillter_x2 = fillter_x2
+        self.limit_y = 100
         self.file_path_csv = file_path_csv
-        self.mst_a_b = []
+        
         self.initUI()
+        self.a1 = 0
+        self.b1 = 0
+        self.a2 = 0
+        self.b2 = 0
     def initUI(self):
         self.setWindowTitle("Analyze")
         self.figure = plt.figure()
@@ -62,17 +67,19 @@ class Analyze_mst(QDialog):
         self.label_1 = QLabel('Average window size : ')
         self.label_2 = QLabel('Rate of Change periods : ')
         self.label_3 = QLabel('Start Analyze of x : ')
-        self.label_4 = QLabel('Limit of y : ')
+        self.label_4 = QLabel('Stop Analyze of x : ')
         self.parameter_1 = QSpinBox()
         self.parameter_2 = QSpinBox()
         self.parameter_3 = QSpinBox()
         self.parameter_4 = QSpinBox()
+        self.parameter_3.setSingleStep(50)
+        self.parameter_4.setSingleStep(50)
         self.parameter_1.setValue(self.window_size)
         self.parameter_2.setValue(self.periods)
         self.parameter_3.setMaximum(2000)
-        self.parameter_3.setValue(self.fillter_x)
-        self.parameter_4.setMaximum(100)
-        self.parameter_4.setValue(self.limit_y)
+        self.parameter_3.setValue(self.fillter_x1)
+        self.parameter_4.setMaximum(2000)
+        self.parameter_4.setValue(self.fillter_x2)
 
         self.layout.addWidget(self.label_1)
         self.layout.addWidget(self.parameter_1)
@@ -94,14 +101,11 @@ class Analyze_mst(QDialog):
     def closeAndReturn_mst(self):
         self.window_size = self.parameter_1.value()
         self.periods = self.parameter_2.value()
-        self.fillter_x = self.parameter_3.value()
-        self.limit_y = self.parameter_4.value()
+        self.fillter_x1 = self.parameter_3.value()
+        self.fillter_x2 = self.parameter_4.value()
         self.Analyze_mst(self.file_path_csv)
-        print("fillter_x"+ str(self.fillter_x))
         self.show_graph_window()
-        #self.close()
-        self.parent().showParameterValue(self.mst_a_b)
-        self.parent().show_graph_in_main_window(self.ax1, self.ax2)
+
         
         pass
 
@@ -109,105 +113,98 @@ class Analyze_mst(QDialog):
     
     def Analyze_mst(self, path_file_csv):
         df = pd.read_csv(path_file_csv)
-        self.condition_mst(df)
-        a, b = self.plot_mst(self.file_path)
-        self.mst_a_b = [a,b]
+        self.find_mst(df, self.fillter_x1, self.fillter_x2)
+
         pass
     
 
-    def condition_mst(self, data_file): 
+    def find_mst(self, data_file, start_x, stop_x): 
         data_file['MValue_Mean'] = data_file['MValue'].rolling(window=self.window_size).mean()
         data_file['SValue_Mean'] = data_file['SValue'].rolling(window=self.window_size).mean()
-        data_file['MValue_Analyze'] = abs(100*data_file['MValue_Mean'].diff(periods=self.periods).round(3))  # Rate of change for Data1
-        data_file['SValue_Analyze'] = abs(100*data_file['SValue_Mean'].diff(periods=self.periods).round(3) )# Rate of change for Data2
-        data_file['MValue_Analyze'] = data_file['MValue_Analyze'].where(data_file['MValue_Analyze'] <= self.limit_y)
-        data_file['SValue_Analyze'] = data_file['SValue_Analyze'].where(data_file['SValue_Analyze'] <= self.limit_y) 
+        data_file['MValue_Analyze'] = abs(data_file['MValue_Mean'].diff(periods=self.periods)) # Rate of change for Data1
+        data_file['SValue_Analyze'] = abs(data_file['SValue_Mean'].diff(periods=self.periods))# Rate of change for Data2
+        #filter data MValue_Mean start x to stop x
+        filtered_df = data_file[(data_file['NO'] >= start_x) & (data_file['NO'] <= (start_x+200))]
+        #Detect MST Poin AB of Capacitive
+        max_value1 = filtered_df.loc[filtered_df['MValue_Mean'].idxmax()]
+        print(f'The point A : {max_value1["NO"]} sec at  Max value : {max_value1["MValue_Mean"]}')   
+        filtered_df1 = data_file[(data_file['NO'] >= max_value1["NO"]) & (data_file['NO']<= stop_x)]
+        min_value = filtered_df1.loc[filtered_df1['MValue_Analyze'].idxmin()]
+        min_value_row = filtered_df1[filtered_df1['MValue_Analyze'] == min_value["MValue_Analyze"]]
+        # count occurrences of min
+        min_value_count = min_value_row.shape[0]
+        min_value_times = min_value_row['NO'].tolist()
+        #print(f'Min value : {min_value["MValue_Analyze"]} at the time {min_value["NO"]} sec')
+        #print(f'Min_value is {min_value["MValue_Analyze"]} occurs : {min_value_count}')
+        point_b = self.find_start_of_longest_consecutive_sequence(min_value_times)
+        point_b_value = data_file[data_file['NO']== point_b]
+        print(f'the Point B : {point_b} sec  at value is {point_b_value["MValue"].values[0]}')
+
+        #Detect MST Point AB of Tan0
+        min_value2 = filtered_df.loc[filtered_df['SValue_Mean'].idxmin()]
+        print(f'The point A2 : {min_value2["NO"]} sec at  Max value : {min_value2["SValue_Mean"]}') 
+        filtered_df2 = data_file[(data_file['NO'] >= min_value2["NO"]) & (data_file['NO']<= stop_x)]
+        min_value_dif2 = filtered_df2.loc[filtered_df2['SValue_Analyze'].idxmin()]
+        min_value_row2 = filtered_df2[filtered_df2['SValue_Analyze'] == min_value_dif2["SValue_Analyze"]]
+        min_value_coun2 = min_value_row2.shape[0]
+        min_value_times2 = min_value_row2['NO'].tolist()
+        point_b2 = self.find_start_of_longest_consecutive_sequence(min_value_times2)
+        point_b_value2 = data_file[data_file['NO']== point_b2]
+        print(f'the Point B2 : {point_b2} sec  at value is {point_b_value2["SValue"].values[0]}')
+        #show on spingbox
+        self.parent().showParameterValue(max_value1["NO"],point_b,min_value2["NO"],point_b2)
+        self.a1 = int(max_value1["NO"])
+        self.b1 = int(point_b)
+        self.a2 = int(min_value2["NO"])
+        self.b2 = int(point_b2)
+
         #print(data_file)
-        self.file_path = "~/mst_app/analyze/your_file.csv"
+        self.file_path = "/home/mst/mst_app/analyze/your_file.csv"
         self.counter = 0
         while os.path.exists(self.file_path):
             self.counter +=1
-            self.file_path = f"~/mst_app/analyze/your_file{self.counter}.csv"
+            self.file_path = f"/home/mst/mst_app/analyze/your_file{self.counter}.csv"
         data_file.to_csv(self.file_path, index=False)
         pass
 
-    def select_two_tuples(self, grouped_data):
-        two_tuples = [group for group in grouped_data if len(group) >= 2]
-        return two_tuples
-
-    def calculate_average(self, two_tuples):
-        averages = []
-        for group in two_tuples:
-            avg = sum(group) / len(group)
-            averages.append(avg)
-        return averages
-    def find_min(self, two_tuples):
-        lowest_values = []
-        for group in two_tuples:
-            lowest_value = min(group)
-            lowest_values.append(lowest_value)
-        return lowest_values
-
-    def classify_into_groups(self, data):
-        groups = {}
-        for value in data:
-            group = value // 10
-            if group not in groups:
-                groups[group] = []
-            groups[group].append(value)
-        return tuple(groups.values())
-    
     def plot_mst(self, file_path):
-        a = 0
-        b = 0
-        df = pd.read_csv(file_path)
-        peaks_MValue_Analyze, _ = find_peaks(df['MValue_Analyze'].dropna(), height=0)
-        peaks_MValue_Analyze = [peak for peak in peaks_MValue_Analyze if df['NO'].iloc[peak] > self.fillter_x]
-        top_peaks_MValue_Analyze = sorted(zip(peaks_MValue_Analyze, df['MValue_Analyze'].iloc[peaks_MValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
-
-        peaks_SValue_Analyze, _ = find_peaks(df['SValue_Analyze'].dropna(), height=0)
-        peaks_SValue_Analyze = [peak for peak in peaks_SValue_Analyze if df['NO'].iloc[peak] > self.fillter_x]
-        top_peaks_SValue_Analyze = sorted(zip(peaks_SValue_Analyze, df['SValue_Analyze'].iloc[peaks_SValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
-
-        mst = []
-   
-
-        for idx, peak in enumerate(top_peaks_MValue_Analyze):
-            mst.append(df['NO'].iloc[peak[0]])
-        for idx, peak in enumerate(top_peaks_SValue_Analyze):
-            mst.append(df['NO'].iloc[peak[0]])
-     
-        # Example data
-        data_points = mst
-
-        # Classify values into groups
-        grouped_data = self.classify_into_groups(data_points)
-
-        # Select two tuples with two members each
-        two_tuples = self.select_two_tuples(grouped_data)
-        print("two_tuples" + str(two_tuples))
-        # Calculate average for each tuple
-        averages = self.find_min(two_tuples)
-
-        # Print the averages
-        print("Averages of selected tuples:", averages)
-        if len(averages) == 0:
-            QMessageBox.critical(self,"ผิดพลาด","ไม่สามารถหาจุดเปลี่ยนของกราฟได้")
-        elif len(averages)  == 1:
-            QMessageBox.warning(self,"แจ้งเตือน","พบการเปลี่ยนแปลงของกราฟ 1 ตำแหน่ง")
-            a = averages[0]
-            b = 0
-        elif len(averages)  >= 2:
-            a = averages[0]
-            b = averages[1]
-        return a,b
+        pass
     
     def show_graph_window(self):
-        self.graph_window = GraphWindow(path=self.file_path)
-        self.graph_window.show()
+        self.graph_window1 = GraphWindow(path=self.file_path, sellet ="cap",a= self.a1,b=self.b1)
+        self.graph_window2 = GraphWindow(path=self.file_path, sellet="tan", a= self.a2,b=self.b2)
+        self.graph_window2.show()
+        self.graph_window1.show()
+
+    def find_start_of_longest_consecutive_sequence(self, numbers):
+        if not numbers:
+            return None
+
+        # Create a set from the list for O(1) look-ups
+        num_set = set(numbers)
+        longest_streak = 0
+        start_number = None
+
+        for num in numbers:
+            # Only consider `num` as the start of a sequence if `num - 1` is not in the set
+            if num - 1 not in num_set:
+                current_num = num
+                current_streak = 1
+
+                # Count the length of the consecutive sequence starting from `num`
+                while current_num + 1 in num_set:
+                    current_num += 1
+                    current_streak += 1
+
+                # Update the longest streak and the corresponding start number
+                if current_streak > longest_streak:
+                    longest_streak = current_streak
+                    start_number = num
+
+        return start_number
 
 class GraphWindow(QDialog):
-    def __init__(self,path):
+    def __init__(self,path,sellet,a,b):
         super().__init__()
         self.path = path
         self.setWindowTitle("Graph Window")
@@ -225,49 +222,45 @@ class GraphWindow(QDialog):
         self.layout2.addWidget(self.canvas)
         self.layout2.addWidget(self.toolbar)
         self.setLayout(self.layout2)
-        self.generate_plot(self.path)
+        if sellet == "cap" :
+            self.generate_plot1(self.path,a,b)
+        if sellet == "tan":
+            self.generate_plot2(self.path,a,b)
 
-    def generate_plot(self, file_path):
+    def generate_plot1(self, file_path,a,b):
         # Generate random time series data
         df = pd.read_csv(file_path)
-        peaks_MValue_Analyze, _ = find_peaks(df['MValue_Analyze'].dropna(), height=0)
-        peaks_MValue_Analyze = [peak for peak in peaks_MValue_Analyze if df['NO'].iloc[peak] > 500]
-        top_peaks_MValue_Analyze = sorted(zip(peaks_MValue_Analyze, df['MValue_Analyze'].iloc[peaks_MValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
-
-        peaks_SValue_Analyze, _ = find_peaks(df['SValue_Analyze'].dropna(), height=0)
-        peaks_SValue_Analyze = [peak for peak in peaks_SValue_Analyze if df['NO'].iloc[peak] > 500]
-        top_peaks_SValue_Analyze = sorted(zip(peaks_SValue_Analyze, df['SValue_Analyze'].iloc[peaks_SValue_Analyze]), key=lambda x: x[1], reverse=True)[:5]
-
-        mst = []
-   
-
-
+        point_a = df[df['NO']== a]
+        point_b = df[df['NO']== b]
         # Plot the time series data
-        self.ax1 = self.figure.add_subplot(111)
+        ax1 = self.figure.add_subplot(111)
        
-        self.ax1.set_xlabel('Sec.')
-        self.ax1.set_ylabel('Cap', color='tab:red')
-        self.ax1.plot(df['NO'], df['MValue_Mean'], color='red', label='C')
-        self.ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='change rate')
-        self.ax1.tick_params(axis='y', labelcolor='tab:red')
+        ax1.set_xlabel('Sec.')
+        ax1.set_ylabel('Cap', color='tab:red')
+        ax1.plot(df['NO'], df['MValue'], color='red', label='Capacitive')
+        ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='Dif Change')
+        ax1.annotate(f"A = {a}", xy=(a, point_a["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='right')
+        ax1.annotate(f"B = {b}", xy=(b, point_b["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='left')
+        ax1.scatter([a,b], (point_a["MValue"].values[0],point_b["MValue"].values[0]), color='red', s=50, zorder=5,alpha=0.4)
+        ax1.axvline(x=a, ymin=0, ymax=100, color='gray', linestyle='--')
+        ax1.axvline(x=b, ymin=0, ymax=100, color='gray', linestyle='--')
+        #ax1.tick_params(axis='y', labelcolor='tab:red')
 
-        for idx, peak in enumerate(top_peaks_MValue_Analyze):
-            #self.ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
-            self.ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
-            self.ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='gray', linestyle='--')
-            mst.append(df['NO'].iloc[peak[0]])
-        for idx, peak in enumerate(top_peaks_SValue_Analyze):
-            #self.ax1.plot(df['NO'].iloc[peak[0]], peak[1], 'go', label=f'Peak{idx+1}')
-            self.ax1.text(df['NO'].iloc[peak[0]], peak[1], f"NO: {df['NO'].iloc[peak[0]]}", fontsize=8, verticalalignment='bottom')
-            self.ax1.axvline(x=df['NO'].iloc[peak[0]], ymin=0, ymax=100, color='pink', linestyle='--')
-            mst.append(df['NO'].iloc[peak[0]])
-        print(mst)
-        self.ax2 = self.ax1.twinx()  # Create a new y-axis for Data2 and Data4
-        color = 'blue'
-        self.ax2.set_ylabel('tan \u03F4', color=color)
-        self.ax2.plot(df['NO'], df['SValue_Mean'], color=color, label='tan \u03F4')
-        self.ax2.plot(df['NO'], df['SValue_Analyze'], color='purple', label='SValue_Analyze')
-        self.ax2.tick_params(axis='y', labelcolor=color)
-        self.ax2.set_ylim(0, 3)
-      
-        
+    def generate_plot2(self, file_path,a,b):
+        # Generate random time series data
+        df = pd.read_csv(file_path)
+        point_a = df[df['NO']== a]
+        point_b = df[df['NO']== b]
+        # Plot the time series data
+        ax1 = self.figure.add_subplot(111)
+       
+        ax1.set_xlabel('Sec.')
+        ax1.set_ylabel('tan\u03F4', color='tab:blue')
+        ax1.plot(df['NO'], df['SValue'], color='blue', label='tan\u03F4')
+        ax1.plot(df['NO'], df['SValue_Analyze'], color='purple', label='Dif Change')
+        ax1.annotate(f"A = {a}", xy=(a, point_a["SValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='right')
+        ax1.annotate(f"B = {b}", xy=(b, point_b["SValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='left')
+        ax1.scatter([a,b], (point_a["SValue"].values[0],point_b["SValue"].values[0]), color='red', s=50, zorder=5,alpha=0.4)
+        ax1.axvline(x=a, ymin=0, ymax=point_a["SValue"].values[0], color='gray', linestyle='--')
+        ax1.axvline(x=b, ymin=0, ymax=point_b["SValue"].values[0], color='gray', linestyle='--')
+    

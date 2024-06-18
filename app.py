@@ -25,7 +25,7 @@ class WidgetGallery(QWidget):
         
         super().__init__()
         self.initUI()
-        self.s = Serial_mst(port='/dev/mst/meter')
+        self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง
         self.file_path = "/home/mst/mst_app/data/output.csv"
         self.picture_path ="/home/mst/mst_app/data/output.jpg"
         self.str1 = 'C'
@@ -218,15 +218,25 @@ class WidgetGallery(QWidget):
         self.bottomLeftTabWidget.addTab(tab2, "Table")
 
     def createBottomRightGroupBox(self):
-        self.bottomRightGroupBox = QGroupBox("วิเคราะห์ค่าความเสถียรของอนุภาคยาง")
+        self.bottomRightGroupBox = QGroupBox()
         self.bottomRightGroupBox.setFixedHeight(self.set_fixHight)
         self.bottomRightGroupBox.setFixedWidth(300)
         label_a = QLabel("A :")
         label_b = QLabel("B :")
-        self.lineEdit_a = QLineEdit()
-        self.lineEdit_b = QLineEdit()
+        self.label_a_Cap = QLabel("Capacitive")
+        self.label_b_Tan = QLabel("tan \u03F4")
+        self.label_a_Cap.setObjectName("Show")
+        self.label_b_Tan.setObjectName("Show")
+        self.lineEdit_a1 = QSpinBox()
+        self.lineEdit_b1 = QSpinBox()
+        self.lineEdit_a2 = QSpinBox()
+        self.lineEdit_b2 = QSpinBox()
+        self.lineEdit_a1.setMaximum(2000)
+        self.lineEdit_a2.setMaximum(2000)
+        self.lineEdit_b1.setMaximum(2000)
+        self.lineEdit_b2.setMaximum(2000)
         A_B = QWidget()
-        A_B_C = QWidget()
+
         Analiz_layout1 = QHBoxLayout(A_B)
        
         #Analiz_layout.setSpacing(30)
@@ -241,12 +251,15 @@ class WidgetGallery(QWidget):
         self.analiz_mst_ntn.clicked.connect(self.show_windows_analyze)
         self.load_mst_btn.clicked.connect(self.load_data)
         layout = QGridLayout()
-        layout.addWidget(A_B_C,0,2,1,1)
-        layout.addWidget(A_B, 0, 1,1,1)
-        layout.addWidget(label_a,1,0)
-        layout.addWidget(self.lineEdit_a,1,1)
-        layout.addWidget(label_b,2,0)
-        layout.addWidget(self.lineEdit_b,2,1)        
+        layout.addWidget(A_B, 0,0,1,8)
+        layout.addWidget(self.label_a_Cap,1,1,1,3)
+        layout.addWidget(self.label_b_Tan,1,5,1,3)
+        layout.addWidget(label_a,2,0)
+        layout.addWidget(self.lineEdit_a1,2,1,1,3)
+        layout.addWidget(self.lineEdit_a2,2,5,1,3)
+        layout.addWidget(label_b,3,0)
+        layout.addWidget(self.lineEdit_b1,3,1,1,3)        
+        layout.addWidget(self.lineEdit_b2,3,5,1,3)  
 
      
         self.bottomRightGroupBox.setLayout(layout)
@@ -374,19 +387,26 @@ class WidgetGallery(QWidget):
         self.s.set_meter(self.str3)
         if self.str1 ==  "C" :
             self.str1_1 = "F"
+            self.label_a_Cap.setText("Capacitive")
         if self.str1 ==  "L" :
             self.str1_1 = "H"
+            self.label_a_Cap.setText("Inductive")
         if self.str1 ==  "R" :
             self.str1_1 = "\u03A9"
+            self.label_a_Cap.setText("Resistive")
 
         if self.str2 ==  "D" : 
             self.str2_1 = ""
+            self.label_b_Tan.setText("tan \u03F4")
         if self.str2 ==  "Q" :
             self.str2_1 = ""
+            self.label_b_Tan.setText("Q")
         if self.str2 ==  "\u03F4" :
             self.str2_1 = "Rad"
+            self.label_b_Tan.setText("Rad")
         if self.str2 ==  "ESR" :
             self.str2_1 = "\u03A9"
+            self.label_b_Tan.setText("ESR")
         pass
 
     def plot_data(self, data):
@@ -426,7 +446,7 @@ class WidgetGallery(QWidget):
 
 
     def read_serial(self):
-        self.show_meter(self.s.read_meter())
+        self.show_meter(self.s.read_meter()) # แก้ไขก่อน ส่งงาน
         
         pass
     def show_meter(self, data):
@@ -448,9 +468,11 @@ class WidgetGallery(QWidget):
 
         pass
 
-    def showParameterValue(self, data):
-        self.lineEdit_a.setText(str(data[0]))
-        self.lineEdit_b.setText(str(data[1]))
+    def showParameterValue(self, a1,b1,a2,b2):
+        self.lineEdit_a1.setValue(int(a1))
+        self.lineEdit_b1.setValue(int(b1))
+        self.lineEdit_a2.setValue(int(a2))
+        self.lineEdit_b2.setValue(int(b2))
         pass
 
     def show_graph_in_main_window(self, a, b):
@@ -488,11 +510,14 @@ class WidgetGallery(QWidget):
                 with open(file_path, 'w', newline='') as file:
                     writer = csv.writer(file)
                     Text = self.textEdit.toPlainText()
-                    writer.writerows(Text)
+                    lines = Text.strip().split('\n')
+                    data_text = [line.split(',') for line in lines]
+                    writer.writerows(data_text)
                 QMessageBox.information(self, 'Success', 'Data saved to CSV file.')
                 QFileDialog.setDirectory(self, self.file_path)
             except Exception as e:
-                QMessageBox.critical(self, 'Error', f'Failed to save data: {str(e)}')
+                pass
+                #QMessageBox.critical(self, 'Error', f'Failed to save data: {str(e)}')
         pass
 
 if __name__ == '__main__':
@@ -505,6 +530,9 @@ if __name__ == '__main__':
         application.setStyleSheet(
 
         '''
+            #Show{
+                font-size : 10px;
+            }
             #RED{
                 color :red;
             }
