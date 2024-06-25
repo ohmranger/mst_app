@@ -415,7 +415,7 @@ class WidgetGallery(QWidget):
         ax.plot(data.iloc[:, 0], data.iloc[:, 1],'-r')  # Plot 2nd column
         ax2 = ax.twinx()
         ax2.plot(data.iloc[:, 0], data.iloc[:, 2],'-b')  # Plot 3rd column
-        ax2.set_ylabel('tan \u03F4', color='r')
+        ax2.set_ylabel('tan \u03F4', color='b')
         ax.set_title('Data Plot', fontsize=5)
         ax.set_xlabel('time(0.5sec)', fontsize=5)
         ax.set_ylabel('Capacitive',color='r')
