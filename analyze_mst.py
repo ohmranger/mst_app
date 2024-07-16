@@ -236,8 +236,8 @@ class GraphWindow(QDialog):
         ax1 = self.figure.add_subplot(111)
        
         ax1.set_xlabel('Sec.')
-        ax1.set_ylabel('Cap', color='tab:red')
-        ax1.plot(df['NO'], df['MValue'], color='red', label='Capacitive')
+        ax1.set_ylabel('Capacitance', color='tab:red')
+        ax1.plot(df['NO'], df['MValue'], color='red', label='Capacitance')
         ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='Dif Change')
         ax1.annotate(f"A = {a}", xy=(a, point_a["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='right')
         ax1.annotate(f"B = {b}", xy=(b, point_b["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='left')
