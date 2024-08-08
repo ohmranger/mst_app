@@ -232,6 +232,10 @@ class GraphWindow(QDialog):
         df = pd.read_csv(file_path)
         point_a = df[df['NO']== a]
         point_b = df[df['NO']== b]
+        
+        mst_x = int((a+b)/2)
+        mst_y = (point_a["MValue"].values[0] + point_b["MValue"].values[0])/2
+        
         # Plot the time series data
         ax1 = self.figure.add_subplot(111)
        
@@ -241,7 +245,9 @@ class GraphWindow(QDialog):
         ax1.plot(df['NO'], df['MValue_Analyze'], color='orange', label='Dif Change')
         ax1.annotate(f"A = {a}", xy=(a, point_a["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='right')
         ax1.annotate(f"B = {b}", xy=(b, point_b["MValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='left')
+        ax1.annotate(f"MST = {mst_x}", xy=(mst_x, mst_y), xytext=(0, -20), textcoords='offset points', ha='center')
         ax1.scatter([a,b], (point_a["MValue"].values[0],point_b["MValue"].values[0]), color='red', s=50, zorder=5,alpha=0.4)
+        ax1.scatter([mst_x],[mst_y],color='green', s=60, zorder=5,alpha=0.5)
         ax1.axvline(x=a, ymin=0, ymax=100, color='gray', linestyle='--')
         ax1.axvline(x=b, ymin=0, ymax=100, color='gray', linestyle='--')
         #ax1.tick_params(axis='y', labelcolor='tab:red')
@@ -252,6 +258,8 @@ class GraphWindow(QDialog):
         point_a = df[df['NO']== a]
         point_b = df[df['NO']== b]
         # Plot the time series data
+        mst_x = int((a+b)/2)
+        mst_y = (point_a["SValue"].values[0] + point_b["SValue"].values[0])/2
         ax1 = self.figure.add_subplot(111)
        
         ax1.set_xlabel('Sec.')
@@ -260,7 +268,9 @@ class GraphWindow(QDialog):
         ax1.plot(df['NO'], df['SValue_Analyze'], color='purple', label='Dif Change')
         ax1.annotate(f"A = {a}", xy=(a, point_a["SValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='right')
         ax1.annotate(f"B = {b}", xy=(b, point_b["SValue"].values[0]), xytext=(-10, 10), textcoords='offset points', ha='left')
+        ax1.annotate(f"MST = {mst_x}", xy=(mst_x, mst_y), xytext=(0, -20), textcoords='offset points', ha='center')
         ax1.scatter([a,b], (point_a["SValue"].values[0],point_b["SValue"].values[0]), color='red', s=50, zorder=5,alpha=0.4)
+        ax1.scatter([mst_x],[mst_y],color='green', s=60, zorder=5,alpha=0.5)
         ax1.axvline(x=a, ymin=0, ymax=point_a["SValue"].values[0], color='gray', linestyle='--')
         ax1.axvline(x=b, ymin=0, ymax=point_b["SValue"].values[0], color='gray', linestyle='--')
     

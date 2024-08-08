@@ -25,7 +25,7 @@ class WidgetGallery(QWidget):
         
         super().__init__()
         self.initUI()
-        self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง
+        self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง######################
         self.file_path = "/home/mst/mst_app/data/output.csv"
         self.picture_path ="/home/mst/mst_app/data/output.jpg"
         self.str1 = 'C'
@@ -221,20 +221,19 @@ class WidgetGallery(QWidget):
         self.bottomRightGroupBox = QGroupBox()
         self.bottomRightGroupBox.setFixedHeight(self.set_fixHight)
         self.bottomRightGroupBox.setFixedWidth(300)
-        label_a = QLabel("A :")
+        label_a = QLabel("MST (sec.):")
         label_b = QLabel("B :")
         self.label_a_Cap = QLabel("Capacitive")
         self.label_b_Tan = QLabel("tan \u03F4")
         self.label_a_Cap.setObjectName("Show")
         self.label_b_Tan.setObjectName("Show")
-        self.lineEdit_a1 = QSpinBox()
-        self.lineEdit_b1 = QSpinBox()
-        self.lineEdit_a2 = QSpinBox()
-        self.lineEdit_b2 = QSpinBox()
-        self.lineEdit_a1.setMaximum(2000)
-        self.lineEdit_a2.setMaximum(2000)
-        self.lineEdit_b1.setMaximum(2000)
-        self.lineEdit_b2.setMaximum(2000)
+        self.MST_Cap = QSpinBox()
+        
+        self.MST_Tan = QSpinBox()
+        
+        self.MST_Cap.setMaximum(2000)
+        self.MST_Tan.setMaximum(2000)
+
         A_B = QWidget()
 
         Analiz_layout1 = QHBoxLayout(A_B)
@@ -255,11 +254,11 @@ class WidgetGallery(QWidget):
         layout.addWidget(self.label_a_Cap,1,1,1,3)
         layout.addWidget(self.label_b_Tan,1,5,1,3)
         layout.addWidget(label_a,2,0)
-        layout.addWidget(self.lineEdit_a1,2,1,1,3)
-        layout.addWidget(self.lineEdit_a2,2,5,1,3)
-        layout.addWidget(label_b,3,0)
-        layout.addWidget(self.lineEdit_b1,3,1,1,3)        
-        layout.addWidget(self.lineEdit_b2,3,5,1,3)  
+        layout.addWidget(self.MST_Cap,2,1,1,3)
+        layout.addWidget(self.MST_Tan,2,5,1,3)
+        #layout.addWidget(label_b,3,0)
+        #layout.addWidget(self.lineEdit_b1,3,1,1,3)        
+        #layout.addWidget(self.lineEdit_b2,3,5,1,3)  
 
      
         self.bottomRightGroupBox.setLayout(layout)
@@ -418,7 +417,7 @@ class WidgetGallery(QWidget):
         ax2.set_ylabel('tan \u03F4', color='b')
         ax.set_title('Data Plot', fontsize=5)
         ax.set_xlabel('time(0.5sec)', fontsize=5)
-        ax.set_ylabel('Capacitive',color='r')
+        ax.set_ylabel('Capacitance',color='r')
         #ax.legend()
         self.canvas.draw()
         self.picture_path = f"/home/mst/mst_app/data/output{self.counter}.jpg"
@@ -446,7 +445,7 @@ class WidgetGallery(QWidget):
 
 
     def read_serial(self):
-        self.show_meter(self.s.read_meter()) # แก้ไขก่อน ส่งงาน
+        self.show_meter(self.s.read_meter()) # แก้ไขก่อน ส่งงาน   ##############################
         
         pass
     def show_meter(self, data):
@@ -469,10 +468,8 @@ class WidgetGallery(QWidget):
         pass
 
     def showParameterValue(self, a1,b1,a2,b2):
-        self.lineEdit_a1.setValue(int(a1))
-        self.lineEdit_b1.setValue(int(b1))
-        self.lineEdit_a2.setValue(int(a2))
-        self.lineEdit_b2.setValue(int(b2))
+        self.MST_Cap.setValue(int((a1+b1)/2))
+        self.MST_Tan.setValue(int((a2+b2)/2))
         pass
 
     def show_graph_in_main_window(self, a, b):
@@ -531,7 +528,7 @@ if __name__ == '__main__':
 
         '''
             #Show{
-                font-size : 10px;
+                font-size : 15px;
             }
             #RED{
                 color :red;
