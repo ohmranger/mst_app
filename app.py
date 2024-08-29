@@ -230,7 +230,7 @@ class WidgetGallery(QWidget):
         self.MST_Cap = QSpinBox()
         
         self.MST_Tan = QSpinBox()
-        
+        self.label_PSU = QLabel("มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี")
         self.MST_Cap.setMaximum(2000)
         self.MST_Tan.setMaximum(2000)
 
@@ -256,7 +256,7 @@ class WidgetGallery(QWidget):
         layout.addWidget(label_a,2,0)
         layout.addWidget(self.MST_Cap,2,1,1,3)
         layout.addWidget(self.MST_Tan,2,5,1,3)
-        #layout.addWidget(label_b,3,0)
+        layout.addWidget(self.label_PSU,3,0,1,8)
         #layout.addWidget(self.lineEdit_b1,3,1,1,3)        
         #layout.addWidget(self.lineEdit_b2,3,5,1,3)  
 
