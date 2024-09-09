@@ -25,7 +25,7 @@ class WidgetGallery(QWidget):
         
         super().__init__()
         self.initUI()
-        self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง######################
+        #self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง######################
         self.file_path = "/home/mst/mst_app/data/output.csv"
         self.picture_path ="/home/mst/mst_app/data/output.jpg"
         self.str1 = 'C'
@@ -41,7 +41,7 @@ class WidgetGallery(QWidget):
         self.interval_time = 1
         self.frist_time = 0
         self.show_time = 0
-        self.set_fixHight = 150
+        self.set_fixHight = 165
         self.time_end = 99999
 
         self.timer_readSerial.timeout.connect(self.read_serial)
@@ -446,7 +446,7 @@ class WidgetGallery(QWidget):
 
     def read_serial(self):
         self.show_meter(self.s.read_meter()) # แก้ไขก่อน ส่งงาน   ##############################
-        
+            
         pass
     def show_meter(self, data):
         self.measure_1.setText(self.str1 +':'+"{}".format(data[0])+self.str1_1)
