@@ -25,7 +25,7 @@ class WidgetGallery(QWidget):
         
         super().__init__()
         self.initUI()
-        #self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง######################
+        self.s = Serial_mst(port='/dev/mst/meter') #'/dev/mst/meter' แก้ไขก่อนส่ง######################
         self.file_path = "/home/mst/mst_app/data/output.csv"
         self.picture_path ="/home/mst/mst_app/data/output.jpg"
         self.str1 = 'C'
@@ -230,7 +230,7 @@ class WidgetGallery(QWidget):
         self.MST_Cap = QSpinBox()
         
         self.MST_Tan = QSpinBox()
-        self.label_PSU = QLabel("มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี")
+        self.label_PSU = QLabel("ม.สงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี")
         self.MST_Cap.setMaximum(2000)
         self.MST_Tan.setMaximum(2000)
 
